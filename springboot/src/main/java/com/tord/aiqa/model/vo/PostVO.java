@@ -2,12 +2,12 @@ package com.tord.aiqa.model.vo;
 
 import cn.hutool.json.JSONUtil;
 import com.tord.aiqa.model.entity.Post;
+import lombok.Data;
+import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
-import lombok.Data;
-import org.springframework.beans.BeanUtils;
 
 /**
  * 帖子视图

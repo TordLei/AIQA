@@ -1,9 +1,9 @@
 package generator.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import generator.domain.App;
+import com.tord.aiqa.mapper.AppMapper;
+import com.tord.aiqa.model.entity.App;
 import generator.service.AppService;
-import generator.mapper.AppMapper;
 import org.springframework.stereotype.Service;
 
 /**

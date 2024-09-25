@@ -1,11 +1,11 @@
 package com.tord.aiqa.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.tord.aiqa.exception.ThrowUtils;
 import com.tord.aiqa.common.BaseResponse;
 import com.tord.aiqa.common.ErrorCode;
 import com.tord.aiqa.common.ResultUtils;
 import com.tord.aiqa.exception.BusinessException;
+import com.tord.aiqa.exception.ThrowUtils;
 import com.tord.aiqa.model.dto.post.PostQueryRequest;
 import com.tord.aiqa.model.dto.postfavour.PostFavourAddRequest;
 import com.tord.aiqa.model.dto.postfavour.PostFavourQueryRequest;
@@ -15,13 +15,14 @@ import com.tord.aiqa.model.vo.PostVO;
 import com.tord.aiqa.service.PostFavourService;
 import com.tord.aiqa.service.PostService;
 import com.tord.aiqa.service.UserService;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * 帖子收藏接口

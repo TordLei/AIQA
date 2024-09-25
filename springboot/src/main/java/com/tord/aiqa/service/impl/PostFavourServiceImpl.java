@@ -13,10 +13,11 @@ import com.tord.aiqa.model.entity.PostFavour;
 import com.tord.aiqa.model.entity.User;
 import com.tord.aiqa.service.PostFavourService;
 import com.tord.aiqa.service.PostService;
-import javax.annotation.Resource;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
 
 /**
  * 帖子收藏服务实现

@@ -2,6 +2,7 @@ package com.tord.aiqa.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.tord.aiqa.model.entity.Post;
+
 import java.util.Date;
 import java.util.List;
 

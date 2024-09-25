@@ -1,9 +1,9 @@
 package generator.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import generator.domain.UserAnswer;
+import com.tord.aiqa.mapper.UserAnswerMapper;
+import com.tord.aiqa.model.entity.UserAnswer;
 import generator.service.UserAnswerService;
-import generator.mapper.UserAnswerMapper;
 import org.springframework.stereotype.Service;
 
 /**

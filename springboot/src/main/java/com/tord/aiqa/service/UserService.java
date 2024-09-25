@@ -6,8 +6,9 @@ import com.tord.aiqa.model.dto.user.UserQueryRequest;
 import com.tord.aiqa.model.entity.User;
 import com.tord.aiqa.model.vo.LoginUserVO;
 import com.tord.aiqa.model.vo.UserVO;
-import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * 用户服务

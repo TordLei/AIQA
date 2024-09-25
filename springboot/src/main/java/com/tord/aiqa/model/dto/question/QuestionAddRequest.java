@@ -3,7 +3,6 @@ package com.tord.aiqa.model.dto.question;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 创建题目请求
@@ -14,19 +13,15 @@ import java.util.List;
 public class QuestionAddRequest implements Serializable {
 
     /**
-     * 标题
+     * 题目内容（json格式）
      */
-    private String title;
+    private QuestionContentDTO questionContent;
 
     /**
-     * 内容
+     * 应用 id
      */
-    private String content;
+    private Long appId;
 
-    /**
-     * 标签列表
-     */
-    private List<String> tags;
 
     private static final long serialVersionUID = 1L;
 }

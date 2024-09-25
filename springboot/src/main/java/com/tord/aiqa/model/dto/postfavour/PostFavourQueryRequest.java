@@ -2,9 +2,10 @@ package com.tord.aiqa.model.dto.postfavour;
 
 import com.tord.aiqa.common.PageRequest;
 import com.tord.aiqa.model.dto.post.PostQueryRequest;
-import java.io.Serializable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.io.Serializable;
 
 /**
  * 帖子收藏查询请求

@@ -3,10 +3,10 @@ package com.tord.aiqa.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tord.aiqa.common.ErrorCode;
 import com.tord.aiqa.constant.CommonConstant;
 import com.tord.aiqa.constant.UserConstant;
 import com.tord.aiqa.exception.BusinessException;
-import com.tord.aiqa.common.ErrorCode;
 import com.tord.aiqa.mapper.UserMapper;
 import com.tord.aiqa.model.dto.user.UserQueryRequest;
 import com.tord.aiqa.model.entity.User;
@@ -15,15 +15,16 @@ import com.tord.aiqa.model.vo.LoginUserVO;
 import com.tord.aiqa.model.vo.UserVO;
 import com.tord.aiqa.service.UserService;
 import com.tord.aiqa.utils.SqlUtils;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 用户服务实现

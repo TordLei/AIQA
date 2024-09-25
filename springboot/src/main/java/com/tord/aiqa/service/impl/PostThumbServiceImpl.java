@@ -2,19 +2,19 @@ package com.tord.aiqa.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.tord.aiqa.exception.BusinessException;
-import com.tord.aiqa.service.PostService;
-import com.tord.aiqa.service.PostThumbService;
 import com.tord.aiqa.common.ErrorCode;
+import com.tord.aiqa.exception.BusinessException;
 import com.tord.aiqa.mapper.PostThumbMapper;
 import com.tord.aiqa.model.entity.Post;
 import com.tord.aiqa.model.entity.PostThumb;
 import com.tord.aiqa.model.entity.User;
-
-import javax.annotation.Resource;
+import com.tord.aiqa.service.PostService;
+import com.tord.aiqa.service.PostThumbService;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
 
 /**
  * 帖子点赞服务实现

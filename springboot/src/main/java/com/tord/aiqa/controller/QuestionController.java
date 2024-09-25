@@ -1,5 +1,6 @@
 package com.tord.aiqa.controller;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tord.aiqa.annotation.AuthCheck;
 import com.tord.aiqa.common.BaseResponse;
@@ -9,10 +10,7 @@ import com.tord.aiqa.common.ResultUtils;
 import com.tord.aiqa.constant.UserConstant;
 import com.tord.aiqa.exception.BusinessException;
 import com.tord.aiqa.exception.ThrowUtils;
-import com.tord.aiqa.model.dto.question.QuestionAddRequest;
-import com.tord.aiqa.model.dto.question.QuestionEditRequest;
-import com.tord.aiqa.model.dto.question.QuestionQueryRequest;
-import com.tord.aiqa.model.dto.question.QuestionUpdateRequest;
+import com.tord.aiqa.model.dto.question.*;
 import com.tord.aiqa.model.entity.Question;
 import com.tord.aiqa.model.entity.User;
 import com.tord.aiqa.model.vo.QuestionVO;
@@ -53,12 +51,12 @@ public class QuestionController {
     @PostMapping("/add")
     public BaseResponse<Long> addQuestion(@RequestBody QuestionAddRequest questionAddRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(questionAddRequest == null, ErrorCode.PARAMS_ERROR);
-        // todo 在此处将实体类和 DTO 进行转换
         Question question = new Question();
         BeanUtils.copyProperties(questionAddRequest, question);
+        QuestionContentDTO questionContentDTO = questionAddRequest.getQuestionContent();
+        question.setQuestionContent(JSONUtil.toJsonStr(questionContentDTO));
         // 数据校验
         questionService.validQuestion(question, true);
-        // todo 填充默认值
         User loginUser = userService.getLoginUser(request);
         question.setUserId(loginUser.getId());
         // 写入数据库
@@ -111,6 +109,8 @@ public class QuestionController {
         // todo 在此处将实体类和 DTO 进行转换
         Question question = new Question();
         BeanUtils.copyProperties(questionUpdateRequest, question);
+        QuestionContentDTO questionContentDTO = questionUpdateRequest.getQuestionContent();
+        question.setQuestionContent(JSONUtil.toJsonStr(questionContentDTO));
         // 数据校验
         questionService.validQuestion(question, false);
         // 判断是否存在
@@ -217,6 +217,8 @@ public class QuestionController {
         // todo 在此处将实体类和 DTO 进行转换
         Question question = new Question();
         BeanUtils.copyProperties(questionEditRequest, question);
+        QuestionContentDTO questionContentDTO = questionEditRequest.getQuestionContent();
+        question.setQuestionContent(JSONUtil.toJsonStr(questionContentDTO));
         // 数据校验
         questionService.validQuestion(question, false);
         User loginUser = userService.getLoginUser(request);

@@ -1,7 +1,7 @@
 package com.tord.aiqa.service;
 
-import com.tord.aiqa.model.entity.PostThumb;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.tord.aiqa.model.entity.PostThumb;
 import com.tord.aiqa.model.entity.User;
 
 /**

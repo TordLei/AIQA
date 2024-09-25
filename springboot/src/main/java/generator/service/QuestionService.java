@@ -1,7 +1,7 @@
 package generator.service;
 
-import generator.domain.Question;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.tord.aiqa.model.entity.Question;
 
 /**
 * @author tordlei

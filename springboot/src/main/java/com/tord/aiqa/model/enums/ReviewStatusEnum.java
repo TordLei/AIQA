@@ -1,37 +1,29 @@
 package com.tord.aiqa.model.enums;
 
-import org.apache.commons.lang3.ObjectUtils;
+import cn.hutool.core.util.ObjectUtil;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 应用类型枚举
+ * 审核状态枚举
  *
 
  */
-public enum AppTypeEnum {
+public enum ReviewStatusEnum {
 
-    SCORE("得分类", 0),
-    TEST("测评类", 1);
+    REVIEWING("待审核", 0),
+    PASS("通过", 1),
+    REJECT("拒绝", 2);
 
     private final String text;
 
     private final int value;
 
-    AppTypeEnum(String text, int value) {
+    ReviewStatusEnum(String text, int value) {
         this.text = text;
         this.value = value;
-    }
-
-    /**
-     * 获取值列表
-     *
-     * @return
-     */
-    public static List<String> getValues() {
-        return Arrays.stream(values()).map(item -> item.value).collect(Collectors.toList());
     }
 
     /**
@@ -40,19 +32,28 @@ public enum AppTypeEnum {
      * @param value
      * @return
      */
-    public static AppTypeEnum getEnumByValue(String value) {
-        if (ObjectUtils.isEmpty(value)) {
+    public static ReviewStatusEnum getEnumByValue(Integer value) {
+        if (ObjectUtil.isEmpty(value)) {
             return null;
         }
-        for (AppTypeEnum anEnum : AppTypeEnum.values()) {
-            if (anEnum.value.equals(value)) {
+        for (ReviewStatusEnum anEnum : ReviewStatusEnum.values()) {
+            if (anEnum.value == value) {
                 return anEnum;
             }
         }
         return null;
     }
 
-    public String getValue() {
+    /**
+     * 获取值列表
+     *
+     * @return
+     */
+    public static List<Integer> getValues() {
+        return Arrays.stream(values()).map(item -> item.value).collect(Collectors.toList());
+    }
+
+    public int getValue() {
         return value;
     }
 

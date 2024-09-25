@@ -7,19 +7,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 审核状态枚举
+ * App评分策略枚举
  *
 
  */
-public enum AppTypeEnum {
+public enum AppScoreStrategyEnum {
 
-    SCORE("得分类", 0),
-    TEST("测评类", 1);
+    CUSTOM("自定义", 0),
+    AI("AI", 1);
     private final String text;
 
     private final int value;
 
-    AppTypeEnum(String text, int value) {
+    AppScoreStrategyEnum(String text, int value) {
         this.text = text;
         this.value = value;
     }
@@ -30,11 +30,11 @@ public enum AppTypeEnum {
      * @param value
      * @return
      */
-    public static AppTypeEnum getEnumByValue(Integer value) {
+    public static AppScoreStrategyEnum getEnumByValue(Integer value) {
         if (ObjectUtil.isEmpty(value)) {
             return null;
         }
-        for (AppTypeEnum anEnum : AppTypeEnum.values()) {
+        for (AppScoreStrategyEnum anEnum : AppScoreStrategyEnum.values()) {
             if (anEnum.value == value) {
                 return anEnum;
             }

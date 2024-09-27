@@ -11,7 +11,7 @@ import com.tord.aiqa.mapper.AppMapper;
 import com.tord.aiqa.model.dto.app.AppQueryRequest;
 import com.tord.aiqa.model.entity.App;
 import com.tord.aiqa.model.entity.User;
-import com.tord.aiqa.model.enums.AppScoreStrategyEnum;
+import com.tord.aiqa.model.enums.AppScoringStrategyEnum;
 import com.tord.aiqa.model.enums.AppTypeEnum;
 import com.tord.aiqa.model.enums.ReviewStatusEnum;
 import com.tord.aiqa.model.vo.AppVO;
@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,7 +65,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
             ThrowUtils.throwIf(StringUtils.isBlank(appDesc),ErrorCode.PARAMS_ERROR,"应用描述不能为空");
             AppTypeEnum appTypeEnum = AppTypeEnum.getEnumByValue(appType);
             ThrowUtils.throwIf(appTypeEnum == null,ErrorCode.PARAMS_ERROR,"应用类型非法");
-            AppScoreStrategyEnum appScoreStrategyEnum = AppScoreStrategyEnum.getEnumByValue(scoringStrategy);
+            AppScoringStrategyEnum appScoreStrategyEnum = AppScoringStrategyEnum.getEnumByValue(scoringStrategy);
             ThrowUtils.throwIf(appScoreStrategyEnum == null,ErrorCode.PARAMS_ERROR,"应用评分策略非法");
         }
         // 修改数据时，有参数则校验

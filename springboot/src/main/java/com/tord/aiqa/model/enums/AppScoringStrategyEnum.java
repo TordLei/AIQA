@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
  *
 
  */
-public enum AppScoreStrategyEnum {
+public enum AppScoringStrategyEnum {
 
     CUSTOM("自定义", 0),
     AI("AI", 1);
@@ -19,7 +19,7 @@ public enum AppScoreStrategyEnum {
 
     private final int value;
 
-    AppScoreStrategyEnum(String text, int value) {
+    AppScoringStrategyEnum(String text, int value) {
         this.text = text;
         this.value = value;
     }
@@ -30,11 +30,11 @@ public enum AppScoreStrategyEnum {
      * @param value
      * @return
      */
-    public static AppScoreStrategyEnum getEnumByValue(Integer value) {
+    public static AppScoringStrategyEnum getEnumByValue(Integer value) {
         if (ObjectUtil.isEmpty(value)) {
             return null;
         }
-        for (AppScoreStrategyEnum anEnum : AppScoreStrategyEnum.values()) {
+        for (AppScoringStrategyEnum anEnum : AppScoringStrategyEnum.values()) {
             if (anEnum.value == value) {
                 return anEnum;
             }

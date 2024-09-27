@@ -14,12 +14,17 @@ import com.tord.aiqa.model.dto.userAnswer.UserAnswerAddRequest;
 import com.tord.aiqa.model.dto.userAnswer.UserAnswerEditRequest;
 import com.tord.aiqa.model.dto.userAnswer.UserAnswerQueryRequest;
 import com.tord.aiqa.model.dto.userAnswer.UserAnswerUpdateRequest;
+import com.tord.aiqa.model.entity.App;
 import com.tord.aiqa.model.entity.User;
 import com.tord.aiqa.model.entity.UserAnswer;
+import com.tord.aiqa.model.enums.ReviewStatusEnum;
 import com.tord.aiqa.model.vo.UserAnswerVO;
+import com.tord.aiqa.scoring.ScoringStrategyExecutor;
+import com.tord.aiqa.service.AppService;
 import com.tord.aiqa.service.UserAnswerService;
 import com.tord.aiqa.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,6 +48,12 @@ public class UserAnswerController {
     @Resource
     private UserService userService;
 
+    @Resource
+    private AppService appService;
+
+    @Resource
+    private ScoringStrategyExecutor scoringStrategyExecutor;
+
     // region 增删改查
 
     /**
@@ -61,6 +72,13 @@ public class UserAnswerController {
         userAnswer.setChoices(JSONUtil.toJsonStr(choices));
         // 数据校验
         userAnswerService.validUserAnswer(userAnswer, true);
+        Long appId = userAnswerAddRequest.getAppId();
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null , ErrorCode.NOT_FOUND_ERROR);
+        if (!ReviewStatusEnum.PASS.equals(ReviewStatusEnum.getEnumByValue(app.getReviewStatus()))) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR,"审核未通过");
+        }
+        //填充默认值
         User loginUser = userService.getLoginUser(request);
         userAnswer.setUserId(loginUser.getId());
         // 写入数据库
@@ -68,6 +86,15 @@ public class UserAnswerController {
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         // 返回新写入的数据 id
         long newUserAnswerId = userAnswer.getId();
+        //调用评分模块
+        try {
+            UserAnswer userAnswerWithResult = scoringStrategyExecutor.doScore(userAnswerAddRequest.getChoices(), app);
+            userAnswerWithResult.setId(newUserAnswerId);
+            userAnswerService.updateById(userAnswerWithResult);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BusinessException(ErrorCode.OPERATION_ERROR,"评分错误");
+        }
         return ResultUtils.success(newUserAnswerId);
     }
 

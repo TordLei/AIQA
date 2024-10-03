@@ -8,12 +8,14 @@
     >
       <a-form-item field="userName" label="用户名">
         <a-input
+          allow-clear
           v-model="newSearchParams.userName"
           placeholder="请输入用户名"
         />
       </a-form-item>
       <a-form-item field="userProfile" label="用户简介">
         <a-input
+          allow-clear
           v-model="newSearchParams.userProfile"
           placeholder="请输入用户简介"
         />
@@ -36,6 +38,12 @@
       <template #userAvatar="{ record }">
         <a-avatar :imageUrl="record.userAvatar"></a-avatar>
       </template>
+      <template #createTime="{ record }">
+        {{ dayjs(record.createTime).format("YYYY-MM-DD HH:mm:ss") }}
+      </template>
+      <template #updateTime="{ record }">
+        {{ dayjs(record.updateTime).format("YYYY-MM-DD HH:mm:ss") }}
+      </template>
       <template #optional="{ record }">
         <a-space>
           <a-button status="danger" @click="doDelete(record)">删除</a-button>
@@ -53,6 +61,7 @@ import {
 } from "@/api/userController";
 import API from "@/api";
 import message from "@arco-design/web-vue/es/message";
+import { dayjs } from "@arco-design/web-vue/es/_utils/date";
 
 //初始分页搜索参数
 const initSearchParams = {
@@ -122,6 +131,10 @@ watchEffect(() => {
 
 const columns = [
   {
+    title: "ID",
+    dataIndex: "id",
+  },
+  {
     title: "账号",
     dataIndex: "userAccount",
   },
@@ -139,16 +152,18 @@ const columns = [
     dataIndex: "userProfile",
   },
   {
-    title: "密码",
-    dataIndex: "userPassword",
+    title: "权限",
+    dataIndex: "userRole",
   },
   {
-    title: "微信开放平台ID",
-    dataIndex: "unionId",
+    title: "创建日期",
+    dataIndex: "updateTime",
+    slotName: "updateTime",
   },
   {
-    title: "公众号OpenID",
-    dataIndex: "mpOpenId",
+    title: "更新日期",
+    dataIndex: "createTime",
+    slotName: "createTime",
   },
   {
     title: "操作",

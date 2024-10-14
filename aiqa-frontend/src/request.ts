@@ -2,7 +2,7 @@ import axios from "axios";
 
 const myAxios = axios.create({
   baseURL: "http://localhost:8102",
-  timeout: 10000,
+  timeout: 60000,
   withCredentials: true,
 });
 // Add a request interceptor

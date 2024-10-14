@@ -12,9 +12,18 @@
         {{ appId }}
       </a-form-item>
       <a-form-item label="题目列表" :content-flex="false" :merge-props="false">
-        <a-button @click="addQuestion(questionContent.length)">
-          底部添加题目
-        </a-button>
+        <a-space>
+          <a-button @click="addQuestion(questionContent.length)">
+            底部添加题目
+          </a-button>
+          <AiGenerateQuestionDrawer
+            :appId="appId"
+            :onSuccess="onAiGenerateSuccess"
+            :onSseSuccess="onAiGenerateSuccessSse"
+            :onSseStart="onSseStart"
+            :onSseClose="onSseClose"
+          />
+        </a-space>
         <div v-for="(item, index) in questionContent" :key="index">
           <!-- 题目 -->
           <a-space>
@@ -125,6 +134,7 @@ import {
   getQuestionVoByIdUsingGet,
   listQuestionVoByPageUsingPost,
 } from "@/api/questionController";
+import AiGenerateQuestionDrawer from "@/views/add/components/AiGenerateQuestionDrawer.vue";
 
 const loginUserStore = useLoginUserStore();
 
@@ -241,5 +251,24 @@ const handleSubmit = async () => {
   } else {
     message.error("操作失败，" + res.data.message);
   }
+};
+
+//AI生成题目后执行
+const onAiGenerateSuccess = (result: API.QuestionContentDTO[]) => {
+  questionContent.value = [...questionContent.value, ...result];
+};
+
+//AI生成题目后执行(实时生成)
+const onAiGenerateSuccessSse = (result: API.QuestionContentDTO) => {
+  questionContent.value = [...questionContent.value, result];
+};
+
+//SSE开始生成
+const onSseStart = (event: any) => {
+  message.success("开始生成");
+};
+//SSE生成完毕
+const onSseClose = (event: any) => {
+  message.success("生成完毕");
 };
 </script>

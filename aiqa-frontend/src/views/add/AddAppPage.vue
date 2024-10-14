@@ -124,7 +124,7 @@ const handleSubmit = async () => {
     message.success("操作成功，即将跳转到应用详情页");
     setTimeout(() => {
       router.push({
-        path: `/app/detail/${props.id ?? res.data.data}`,
+        path: `/app/detail/${props.id || res.data.data}`,
         replace: true,
       });
     }, 3000);

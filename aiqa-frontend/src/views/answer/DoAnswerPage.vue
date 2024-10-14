@@ -29,8 +29,9 @@
             circle
             :disabled="!currentAnswer"
             @click="doSubmit"
+            :loading="submitLoading"
           >
-            查看结果
+            {{ submitLoading ? "生成中" : "查看结果" }}
           </a-button>
           <a-button v-if="current > 1" circle @click="current -= 1">
             上一题
@@ -56,12 +57,11 @@ import {
   reactive,
 } from "vue";
 
+import { listQuestionVoByPageUsingPost } from "@/api/questionController";
 import {
-  addQuestionUsingPost,
-  editQuestionUsingPost,
-  listQuestionVoByPageUsingPost,
-} from "@/api/questionController";
-import { addUserAnswerUsingPost } from "@/api/userAnswerController";
+  addUserAnswerUsingPost,
+  generateUserAnswerIdUsingGet,
+} from "@/api/userAnswerController";
 
 const router = useRouter();
 
@@ -104,6 +104,21 @@ const props = withDefaults(defineProps<Props>(), {
   appId: () => "",
 });
 
+const submitLoading = ref<boolean>(false);
+
+//唯一 id
+const id = ref<number>();
+
+//生成唯一id
+const generateId = async () => {
+  const res = generateUserAnswerIdUsingGet();
+  if (res.data.code === 0) {
+    id.value = res.data.data as any;
+  } else {
+    message.error("获取唯一id失败" + res.data.message);
+  }
+};
+
 //获取数据
 const loadData = async () => {
   if (!props.appId) {
@@ -138,6 +153,10 @@ watchEffect(() => {
 });
 
 watchEffect(() => {
+  generateId();
+});
+
+watchEffect(() => {
   currentQuestion.value = questionContent.value[current.value - 1];
   currentAnswer.value = answerList[current.value - 1];
 });
@@ -152,7 +171,9 @@ const doSubmit = async () => {
   if (!props.appId || !answerList) {
     return;
   }
+  submitLoading.value = true;
   const res = await addUserAnswerUsingPost({
+    id: id.value,
     appId: props.appId as any,
     choices: answerList,
   });
@@ -164,5 +185,6 @@ const doSubmit = async () => {
   } else {
     message.error("提交答案失败，" + res.data.message);
   }
+  submitLoading.value = false;
 };
 </script>

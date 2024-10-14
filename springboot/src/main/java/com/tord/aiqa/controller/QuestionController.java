@@ -1,5 +1,6 @@
 package com.tord.aiqa.controller;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tord.aiqa.annotation.AuthCheck;
@@ -10,24 +11,33 @@ import com.tord.aiqa.common.ResultUtils;
 import com.tord.aiqa.constant.UserConstant;
 import com.tord.aiqa.exception.BusinessException;
 import com.tord.aiqa.exception.ThrowUtils;
+import com.tord.aiqa.manager.AiManager;
 import com.tord.aiqa.model.dto.question.*;
+import com.tord.aiqa.model.entity.App;
 import com.tord.aiqa.model.entity.Question;
 import com.tord.aiqa.model.entity.User;
+import com.tord.aiqa.model.enums.AppTypeEnum;
 import com.tord.aiqa.model.vo.QuestionVO;
+import com.tord.aiqa.service.AppService;
 import com.tord.aiqa.service.QuestionService;
 import com.tord.aiqa.service.UserService;
+import com.zhipu.oapi.service.v4.model.ModelData;
+import io.reactivex.Flowable;
+import io.reactivex.Scheduler;
+import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 题目接口
- *
-
  */
 @RestController
 @RequestMapping("/question")
@@ -36,9 +46,14 @@ public class QuestionController {
 
     @Resource
     private QuestionService questionService;
-
     @Resource
     private UserService userService;
+    @Resource
+    private AppService appService;
+    @Resource
+    private AiManager aiManager;
+    @Resource
+    private Scheduler vipScheduler;
 
     // region 增删改查
 
@@ -235,6 +250,170 @@ public class QuestionController {
         boolean result = questionService.updateById(question);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
+    }
+
+    // endregion
+
+    // region AI生成题目
+
+    private static final String GENERATE_QUESTION_SYSTEM_MESSAGE = "你是一位严谨的出题专家，我会给你如下信息：\n" +
+            "```\n" +
+            "应用名称，\n" +
+            "【【【应用描述】】】，\n" +
+            "应用类别，\n" +
+            "要生成的题目数，\n" +
+            "每个题目的选项数\n" +
+            "```\n" +
+            "\n" +
+            "请你根据上述信息，按照以下步骤来出题：\n" +
+            "1. 要求：题目和选项尽可能地短，题目不要包含序号，每题的选项数以我提供的为主，题目不能重复\n" +
+            "2. 严格按照下面的 json 格式输出题目和选项\n" +
+            "```\n" +
+            "[{\"options\":[{\"value\":\"选项内容\",\"key\":\"A\"},{\"value\":\"\",\"key\":\"B\"}],\"title\":\"题目标题\"}]\n" +
+            "```\n" +
+            "title 是题目，options 是选项，每个选项的 key 按照英文字母序（比如 A、B、C、D）以此类推，value 是选项内容\n" +
+            "3. 检查题目是否包含序号，若包含序号则去除序号\n" +
+            "4. 返回的题目列表格式必须为 JSON 数组";
+
+    private String getGenerateQuestionUserMessage(App app, int questionNumber, int optionNumber) {
+        StringBuilder userMessage = new StringBuilder();
+        userMessage.append(app.getAppName()).append("\n");
+        userMessage.append(app.getAppDesc()).append("\n");
+        userMessage.append(AppTypeEnum.getEnumByValue(app.getAppType()).getText() + "类").append("\n");
+        userMessage.append(questionNumber).append("\n");
+        userMessage.append(optionNumber);
+        return userMessage.toString();
+    }
+
+    @PostMapping("/ai_generate")
+    public BaseResponse<List<QuestionContentDTO>> aiGenerateQuestion(@RequestBody AiGenerateQuestionRequest aiGenerateQuestionRequest) {
+        ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
+        Long appId = aiGenerateQuestionRequest.getAppId();
+        int questionNumber = aiGenerateQuestionRequest.getQuestionNumber();
+        int optionNumber = aiGenerateQuestionRequest.getOptionNumber();
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
+        //构造prompt
+        String userMessage = getGenerateQuestionUserMessage(app, questionNumber, optionNumber);
+        //AI生成
+        String aiResult = aiManager.doSyncUnstableRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, userMessage);
+        int start = aiResult.indexOf("[");
+        int end = aiResult.lastIndexOf("]");
+        String aiAnswerJson = aiResult.substring(start, end + 1);
+        List<QuestionContentDTO> aiAnswer = JSONUtil.toList(aiAnswerJson, QuestionContentDTO.class);
+        return ResultUtils.success(aiAnswer);
+    }
+
+    @GetMapping("/ai_generate/sse")
+    public SseEmitter aiGenerateQuestionSse(AiGenerateQuestionRequest aiGenerateQuestionRequest) {
+        ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
+        Long appId = aiGenerateQuestionRequest.getAppId();
+        int questionNumber = aiGenerateQuestionRequest.getQuestionNumber();
+        int optionNumber = aiGenerateQuestionRequest.getOptionNumber();
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
+        //构造prompt
+        String userMessage = getGenerateQuestionUserMessage(app, questionNumber, optionNumber);
+
+        //新建SSE连接对象，0表示永不超时
+        SseEmitter sseEmitter = new SseEmitter(0L);
+        AtomicInteger counter = new AtomicInteger(0);
+        StringBuilder stringBuilder = new StringBuilder();
+
+        //AI生成
+        Flowable<ModelData> modelDataFlowable = aiManager.doStreamRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, userMessage, null);
+        modelDataFlowable
+                .observeOn(Schedulers.io())
+                .map(modelData -> modelData.getChoices().get(0).getDelta().getContent())
+                .map(message -> message.replaceAll("\\s", ""))
+                .filter(StrUtil::isNotBlank)
+                .flatMap(message -> {
+                    List<Character> characterList = new ArrayList<>();
+                    for (int i = 0; i < message.length(); i++) {
+                        characterList.add(message.charAt(i));
+                    }
+                    return Flowable.fromIterable(characterList);
+                })
+                .doOnNext(c -> {
+                    if (c == '{') {
+                        counter.addAndGet(1);
+                    }
+                    if (counter.get() > 0) {
+                        stringBuilder.append(c);
+                    }
+                    if (c == '}') {
+                        counter.addAndGet(-1);
+                        if (counter.get() == 0) {
+                            sseEmitter.send(JSONUtil.toJsonStr(stringBuilder));
+                            stringBuilder.setLength(0);
+                        }
+                    }
+                })
+                .doOnError((e) -> log.error("ees Error", e))
+                .doOnComplete(sseEmitter::complete)
+                .subscribe();
+
+        return sseEmitter;
+    }
+
+    @GetMapping("/ai_generate/sse/test")
+    public SseEmitter aiGenerateQuestionSseTest(AiGenerateQuestionRequest aiGenerateQuestionRequest,boolean isVip) {
+        ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
+        Long appId = aiGenerateQuestionRequest.getAppId();
+        int questionNumber = aiGenerateQuestionRequest.getQuestionNumber();
+        int optionNumber = aiGenerateQuestionRequest.getOptionNumber();
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
+        //构造prompt
+        String userMessage = getGenerateQuestionUserMessage(app, questionNumber, optionNumber);
+
+        //新建SSE连接对象，0表示永不超时
+        SseEmitter sseEmitter = new SseEmitter(0L);
+        AtomicInteger counter = new AtomicInteger(0);
+        StringBuilder stringBuilder = new StringBuilder();
+//        String userRole = userService.getLoginUser(request).getUserRole();
+        Scheduler scheduler = Schedulers.single();
+        if (isVip) {
+            scheduler = vipScheduler;
+        }
+        //AI生成
+        Flowable<ModelData> modelDataFlowable = aiManager.doStreamRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, userMessage, null);
+        modelDataFlowable
+                .observeOn(scheduler)
+                .map(modelData -> modelData.getChoices().get(0).getDelta().getContent())
+                .map(message -> message.replaceAll("\\s", ""))
+                .filter(StrUtil::isNotBlank)
+                .flatMap(message -> {
+                    List<Character> characterList = new ArrayList<>();
+                    for (int i = 0; i < message.length(); i++) {
+                        characterList.add(message.charAt(i));
+                    }
+                    return Flowable.fromIterable(characterList);
+                })
+                .doOnNext(c -> {
+                    if (c == '{') {
+                        counter.addAndGet(1);
+                    }
+                    if (counter.get() > 0) {
+                        stringBuilder.append(c);
+                    }
+                    if (c == '}') {
+                        counter.addAndGet(-1);
+                        if (counter.get() == 0) {
+                            if (!isVip){
+                                Thread.sleep(2000L);
+                            }
+                            System.out.println(Thread.currentThread().getName());
+                            sseEmitter.send(JSONUtil.toJsonStr(stringBuilder));
+                            stringBuilder.setLength(0);
+                        }
+                    }
+                })
+                .doOnError((e) -> log.error("ees Error", e))
+                .doOnComplete(sseEmitter::complete)
+                .subscribe();
+
+        return sseEmitter;
     }
 
     // endregion

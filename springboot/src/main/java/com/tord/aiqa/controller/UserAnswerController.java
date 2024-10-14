@@ -1,5 +1,6 @@
 package com.tord.aiqa.controller;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tord.aiqa.annotation.AuthCheck;
@@ -26,6 +27,7 @@ import com.tord.aiqa.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.beans.BeanUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -34,8 +36,6 @@ import java.util.List;
 
 /**
  * 用户答案接口
- *
-
  */
 @RestController
 @RequestMapping("/userAnswer")
@@ -74,26 +74,31 @@ public class UserAnswerController {
         userAnswerService.validUserAnswer(userAnswer, true);
         Long appId = userAnswerAddRequest.getAppId();
         App app = appService.getById(appId);
-        ThrowUtils.throwIf(app == null , ErrorCode.NOT_FOUND_ERROR);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
         if (!ReviewStatusEnum.PASS.equals(ReviewStatusEnum.getEnumByValue(app.getReviewStatus()))) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR,"审核未通过");
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "审核未通过");
         }
         //填充默认值
         User loginUser = userService.getLoginUser(request);
         userAnswer.setUserId(loginUser.getId());
         // 写入数据库
-        boolean result = userAnswerService.save(userAnswer);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        try {
+            boolean result = userAnswerService.save(userAnswer);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        }catch (DuplicateKeyException e){
+            //ignore error
+        }
         // 返回新写入的数据 id
         long newUserAnswerId = userAnswer.getId();
         //调用评分模块
         try {
             UserAnswer userAnswerWithResult = scoringStrategyExecutor.doScore(userAnswerAddRequest.getChoices(), app);
             userAnswerWithResult.setId(newUserAnswerId);
+            userAnswerWithResult.setAppId(null);
             userAnswerService.updateById(userAnswerWithResult);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new BusinessException(ErrorCode.OPERATION_ERROR,"评分错误");
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "评分错误");
         }
         return ResultUtils.success(newUserAnswerId);
     }
@@ -195,7 +200,7 @@ public class UserAnswerController {
      */
     @PostMapping("/list/page/vo")
     public BaseResponse<Page<UserAnswerVO>> listUserAnswerVOByPage(@RequestBody UserAnswerQueryRequest userAnswerQueryRequest,
-                                                               HttpServletRequest request) {
+                                                                   HttpServletRequest request) {
         long current = userAnswerQueryRequest.getCurrent();
         long size = userAnswerQueryRequest.getPageSize();
         // 限制爬虫
@@ -216,7 +221,7 @@ public class UserAnswerController {
      */
     @PostMapping("/my/list/page/vo")
     public BaseResponse<Page<UserAnswerVO>> listMyUserAnswerVOByPage(@RequestBody UserAnswerQueryRequest userAnswerQueryRequest,
-                                                                 HttpServletRequest request) {
+                                                                     HttpServletRequest request) {
         ThrowUtils.throwIf(userAnswerQueryRequest == null, ErrorCode.PARAMS_ERROR);
         // 补充查询条件，只查询当前登录用户的数据
         User loginUser = userService.getLoginUser(request);
@@ -266,4 +271,11 @@ public class UserAnswerController {
     }
 
     // endregion
+
+    @GetMapping("/generate/id")
+    public BaseResponse<Long> generateUserAnswerId() {
+        return ResultUtils.success(IdUtil.getSnowflakeNextId());
+    }
+
+
 }

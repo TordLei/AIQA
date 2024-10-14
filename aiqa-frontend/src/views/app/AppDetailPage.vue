@@ -34,7 +34,7 @@
             <a-button type="primary" :href="`/answer/do/${id}`">
               开始答题
             </a-button>
-            <a-button>分享应用</a-button>
+            <a-button @click="doShare">分享应用</a-button>
             <a-button v-if="isSelf" :href="`/add/question/${data.id}`">
               设置题目
             </a-button>
@@ -52,6 +52,7 @@
       </a-row>
     </a-card>
   </div>
+  <ShareModel :link="shareLink" title="应用分享" ref="shareModelRef" />
 </template>
 
 <script setup lang="ts">
@@ -63,6 +64,7 @@ import { withDefaults, defineProps } from "vue";
 import { APP_SCORING_STRATEGY_MAP, APP_TYPE_MAP } from "../../constant/app";
 import { dayjs } from "@arco-design/web-vue/es/_utils/date";
 import { useLoginUserStore } from "@/store/userStore";
+import ShareModel from "@/components/ShareModel.vue";
 
 //获取传参的id
 interface Props {
@@ -104,6 +106,17 @@ const loadData = async () => {
 watchEffect(() => {
   loadData();
 });
+
+//接收弹窗组件暴露出来的函数
+const shareModelRef = ref();
+
+const shareLink = `${window.location.protocol}://${window.location.host}/app/detail/${props.id}`;
+
+const doShare = () => {
+  if (shareModelRef.value) {
+    shareModelRef.value.openModal();
+  }
+};
 </script>
 
 <style scoped>

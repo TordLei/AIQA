@@ -16,18 +16,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@ScoringStrategyConfig(appType = 1,scoringStrategy = 0)
+/**
+ * 自定义测评类应用评分策略
+ */
+
+@ScoringStrategyConfig(appType = 1, scoringStrategy = 0)
 public class CustomTestScoringStrategy implements ScoringStrategy {
     @Resource
     private QuestionService questionService;
     @Resource
     private ScoringResultService scoringResultService;
+
     @Override
     public UserAnswer doScore(List<String> choices, App app) throws Exception {
         //1、根据id查询到题目和题目结果信息
         Long id = app.getId();
         Question question = questionService.getOne(
-                Wrappers.lambdaQuery(Question.class).eq(Question::getAppId,id)
+                Wrappers.lambdaQuery(Question.class).eq(Question::getAppId, id)
         );
         List<ScoringResult> scoringResultList = scoringResultService.list(
                 Wrappers.lambdaQuery(ScoringResult.class).eq(ScoringResult::getAppId, id)
@@ -44,12 +49,12 @@ public class CustomTestScoringStrategy implements ScoringStrategy {
                 //遍历题目中的选项
                 for (QuestionContentDTO.Option option : questionContentDTO.getOptions()) {
                     //如果答案和选项的key匹配，key在map中加1
-                    if (option.getKey().equals(choice)){
+                    if (option.getKey().equals(choice)) {
                         String result = option.getResult();
-                        if (!optionCount.containsKey(result)){
-                            optionCount.put(result,0);
+                        if (!optionCount.containsKey(result)) {
+                            optionCount.put(result, 0);
                         }
-                        optionCount.put(result,optionCount.get(result)+1);
+                        optionCount.put(result, optionCount.get(result) + 1);
                     }
                 }
             }
@@ -61,7 +66,7 @@ public class CustomTestScoringStrategy implements ScoringStrategy {
         for (ScoringResult scoringResult : scoringResultList) {
             List<String> resultProp = JSONUtil.toList(scoringResult.getResultProp(), String.class);
             int score = resultProp.stream().mapToInt(prop -> optionCount.getOrDefault(prop, 0)).sum();
-            if (score>maxScore){
+            if (score > maxScore) {
                 maxScoringResult = scoringResult;
             }
         }

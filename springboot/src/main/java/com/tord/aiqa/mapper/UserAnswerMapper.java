@@ -1,7 +1,11 @@
 package com.tord.aiqa.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.tord.aiqa.model.dto.statistic.AppAnswerCountDTO;
+import com.tord.aiqa.model.dto.statistic.AppAnswerResultCountDTO;
 import com.tord.aiqa.model.entity.UserAnswer;
+
+import java.util.List;
 
 /**
 * @author tordlei
@@ -10,7 +14,8 @@ import com.tord.aiqa.model.entity.UserAnswer;
 * @Entity com.tord.aiqa.model.entity.UserAnswer
 */
 public interface UserAnswerMapper extends BaseMapper<UserAnswer> {
-
+    List<AppAnswerCountDTO> doAppAnswerCount();
+    List<AppAnswerResultCountDTO> doAppAnswerResultCount(Long appId);
 }
 
 

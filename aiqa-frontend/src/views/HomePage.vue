@@ -32,6 +32,7 @@
 
 <script setup lang="ts">
 import AppCard from "@/components/AppCard.vue";
+import ShareModel from "@/components/ShareModel.vue";
 import { ref, watchEffect } from "vue";
 import API from "@/api";
 import message from "@arco-design/web-vue/es/message";

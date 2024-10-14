@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * 自定义测评类应用评分策略
+ * 自定义评分类应用评分策略
  */
 @ScoringStrategyConfig(appType = 0,scoringStrategy = 0)
 public class CustomScoreScoringStrategy implements ScoringStrategy {

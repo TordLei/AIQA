@@ -55,9 +55,11 @@ public class UserAnswerServiceImpl extends ServiceImpl<UserAnswerMapper, UserAns
     public void validUserAnswer(UserAnswer userAnswer, boolean add) {
         ThrowUtils.throwIf(userAnswer == null, ErrorCode.PARAMS_ERROR);
         Long appId = userAnswer.getAppId();
+        Long id = userAnswer.getId();
         // 创建数据时，参数不能为空
         if (add) {
             ThrowUtils.throwIf(appId == null || appId < 0, ErrorCode.PARAMS_ERROR,"appId非法");
+            ThrowUtils.throwIf(id == null || id < 0, ErrorCode.PARAMS_ERROR,"id非法");
         }
         // 修改数据时，有参数则校验
         if (appId != null) {
